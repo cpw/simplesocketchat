@@ -69,11 +69,11 @@ public class WebSocketClient {
         return t;
     }
 
-    public void consumeChat(final ServerChatEvent serverChatEvent) {
-        channel.writeAndFlush(new TextWebSocketFrame());
-    }
-
     public void sendTextFrame(final String string) {
         channel.writeAndFlush(new TextWebSocketFrame(string));
+    }
+
+    public void setStatusHandler(Consumer<WebSocketClientHandler.Status> consumer) {
+        clientHandler.setStatusHandler(consumer);
     }
 }

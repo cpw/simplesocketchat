@@ -12,7 +12,15 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     private final WebSocketClientHandshaker handshaker;
     private ChannelPromise handshakeFuture;
     private Optional<Consumer<String>> consumer = Optional.empty();
+    private Optional<Consumer<Status>> statusHandler = Optional.empty();
 
+    public void setStatusHandler(final Consumer<Status> statusHandler) {
+        this.statusHandler = Optional.ofNullable(statusHandler);
+    }
+
+    enum Status {
+        DISCONNECTED;
+    }
     public WebSocketClientHandler(WebSocketClientHandshaker handshaker) {
         this.handshaker = handshaker;
     }
@@ -33,7 +41,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        System.out.println("WebSocket Client disconnected!");
+        statusHandler.ifPresent(c->c.accept(Status.DISCONNECTED));
     }
 
     @Override
@@ -53,9 +61,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
         if (msg instanceof FullHttpResponse) {
             FullHttpResponse response = (FullHttpResponse) msg;
-            throw new IllegalStateException(
-                    "Unexpected FullHttpResponse (getStatus=" + response.status() +
-                            ", content=" + response.content().toString(CharsetUtil.UTF_8) + ')');
+            throw new IllegalStateException("Unexpected FullHttpResponse (getStatus=" + response.status() +", content=" + response.content().toString(CharsetUtil.UTF_8) + ')');
         }
 
         WebSocketFrame frame = (WebSocketFrame) msg;
